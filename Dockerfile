@@ -1,4 +1,4 @@
-FROM pytorch/pytorch
+FROM paddlecloud/paddledetection
 
 
 
@@ -24,4 +24,4 @@ RUN python -m pip install --user -rrequirements.txt
 
 COPY --chown=algorithm:algorithm process.py /opt/algorithm/
 
-ENTRYPOINT python -m process $0 $@
+ENTRYPOINT ["python", "-m", "process", "-c", "PaddleDetection_Surtool23/configs/semi_det/denseteacher/denseteacher_fcos_r50_fpn_coco_full.yml", "-o", "weights=PaddleDetection_Surtool23/model_weights/denseteacher_fcos_r50_fpn_coco_full/149.pdparams"]

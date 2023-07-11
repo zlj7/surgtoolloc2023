@@ -1,3 +1,5 @@
+from PaddleDetection_Surtool23.tools.surtool_infer import infer
+
 import SimpleITK
 import numpy as np
 import cv2
@@ -14,12 +16,13 @@ from typing import (Tuple)
 from evalutils.exceptions import ValidationError
 import random
 import json
+import os
 
 
 ####
 # Toggle the variable below to debug locally. The final container would need to have execute_in_docker=True
 ####
-execute_in_docker = True
+execute_in_docker = False
 
 
 class VideoLoader():
@@ -80,18 +83,18 @@ class Surgtoolloc_det(DetectionAlgorithm):
         
         self.tool_list = ["needle_driver",
                           "monopolar_curved_scissor",
-                          "force_bipolar",
-                          "clip_applier",
-                          "tip_up_fenestrated_grasper",
                           "cadiere_forceps",
-                          "bipolar_forceps",
-                          "vessel_sealer",
                           "suction_irrigator",
-                          "bipolar_dissector",
+                          "bipolar_forceps",
+                          "force_bipolar",
+                          "grasping_retractor",
+                          "vessel_sealer",
                           "prograsp_forceps",
-                          "stapler",
                           "permanent_cautery_hook_spatula",
-                          "grasping_retractor"]
+                          "tip_up_fenestrated_grasper",
+                          "clip_applier",
+                          "stapler",
+                          "bipolar_dissector"]
 
     def process_case(self, *, idx, case):
         # Input video would return the collection of all frames (cap object)
@@ -106,20 +109,32 @@ class Surgtoolloc_det(DetectionAlgorithm):
         with open(str(self._output_file), "w") as f:
             json.dump(self._case_results[0], f)
 
-    def generate_bbox(self, frame_id):
+    def generate_bbox(self, frame_id, temp_images_path):
         # bbox coordinates are the four corners of a box: [x, y, 0.5]
         # Starting with top left as first corner, then following the clockwise sequence
         # origin is defined as the top left corner of the video frame
-        num_predictions = 2
+        bbox_list = infer(os.path.join(temp_images_path, f"frame_{frame_id}.jpg"))
         predictions = []
-        for n in range(num_predictions):
-            name = f'slice_nr_{frame_id}_' + self.tool_list[n]
-            bbox = [[54.7, 95.5, 0.5],
-                    [92.6, 95.5, 0.5],
-                    [92.6, 136.1, 0.5],
-                    [54.7, 136.1, 0.5]]
-            score = np.random.rand()
+        for box in bbox_list:
+            # fetch class name
+            category_id = box['category_id']
+            name = f'slice_nr_{frame_id}_' + self.tool_list[category_id]
+
+            # transform to corner format
+            xmin, ymin, w, h = box['bbox']
+            xmax, ymax = xmin + w, ymin + h
+            bbox = []
+            bbox.append([xmin, ymin, 0.5])
+            bbox.append([xmax, ymin, 0.5])
+            bbox.append([xmax, ymax, 0.5])
+            bbox.append([xmin, ymax, 0.5])
+            # bbox = [[54.7, 95.5, 0.5],
+            #         [92.6, 95.5, 0.5],
+            #         [92.6, 136.1, 0.5],
+            #         [54.7, 136.1, 0.5]]
+            score = box['score']
             prediction = {"corners": bbox, "name": name, "probability": score}
+            print(prediction)
             predictions.append(prediction)
         return predictions
 
@@ -134,14 +149,55 @@ class Surgtoolloc_det(DetectionAlgorithm):
         print('Video file to be loaded: ' + str(fname))
         cap = cv2.VideoCapture(str(fname))
         num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
         ###                                                                     ###
         ###  TODO: adapt the following part for YOUR submission: make prediction
         ###                                                                     ###
+
+        # video2images
+        temp_images_path = "./temp_images"
+        if not os.path.exists(temp_images_path):
+            os.mkdir(temp_images_path)
+        
+        # delete former images
+        for filename in os.listdir(temp_images_path):
+            file_path = os.path.join(temp_images_path, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print(f"unable to delete {file_path}: {e}")
+        
+        if not cap.isOpened():
+            print("unable to open video!")
+            exit()
+
+        # save each frame as an image file
+        frame_count = 0
+        while True:
+            # next frame
+            ret, frame = cap.read()
+
+            # reach th end
+            if not ret:
+                break
+
+            # save image
+            filename = os.path.join(temp_images_path, f"frame_{frame_count}.jpg")
+            cv2.imwrite(filename, frame)
+
+            # update counter
+            frame_count += 1
+
+        # close video file
+        cap.release()
        
         
         all_frames_predicted_outputs = []
-        for fid in range(num_frames):
-            tool_detections = self.generate_bbox(fid)
+        for fid in range(frame_count):
+            tool_detections = self.generate_bbox(fid, temp_images_path)
             all_frames_predicted_outputs += tool_detections
 
         return all_frames_predicted_outputs
@@ -149,3 +205,4 @@ class Surgtoolloc_det(DetectionAlgorithm):
 
 if __name__ == "__main__":
     Surgtoolloc_det().process()
+    #infer()
