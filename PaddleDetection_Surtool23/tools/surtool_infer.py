@@ -29,6 +29,7 @@ warnings.filterwarnings('ignore')
 import glob
 import ast
 
+
 import paddle
 from ppdet.core.workspace import load_config, merge_config
 from ppdet.engine import Trainer
@@ -155,7 +156,7 @@ def get_test_images(infer_dir, infer_img):
     return images
 
 
-def run(FLAGS, cfg):
+def run(trainer, FLAGS, cfg):
     # build trainer
     trainer = Trainer(cfg, mode='test')
 
@@ -185,8 +186,9 @@ def run(FLAGS, cfg):
             output_dir=FLAGS.output_dir,
             save_results=FLAGS.save_results,
             visualize=FLAGS.visualize)
-        filtered_box = [d for d in box if d['score'] > FLAGS.draw_threshold] #鍙栧嚭姒傜巼澶т簬闃堝�肩殑
-        return filtered_box
+        # print(box)
+        # filtered_box = [d for d in box if d['score'] > FLAGS.draw_threshold] #取出概率大于阈值的
+        return box
 
 
 def infer(image_path):
@@ -231,8 +233,8 @@ def infer(image_path):
     check_mlu(cfg.use_mlu)
     check_version()
 
-    boxes = run(FLAGS, cfg)
-    return boxes
+    #boxes = run(FLAGS, cfg)
+    #return boxes
 
 
 # if __name__ == '__main__':

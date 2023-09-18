@@ -1027,18 +1027,18 @@ class Trainer(object):
                             if 'keypoint' in batch_res else None
                     pose3d_res = batch_res['pose3d'][start:end] \
                             if 'pose3d' in batch_res else None
-                    image = visualize_results(
-                        image, bbox_res, mask_res, segm_res, keypoint_res,
-                        pose3d_res, int(im_id), catid2name, draw_threshold)
-                    self.status['result_image'] = np.array(image.copy())
+                    #image = visualize_results(
+                     #   image, bbox_res, mask_res, segm_res, keypoint_res,
+                      #  pose3d_res, int(im_id), catid2name, draw_threshold)
+                    #self.status['result_image'] = np.array(image.copy())
                     if self._compose_callback:
                         self._compose_callback.on_step_end(self.status)
                     # save image with detection
-                    save_name = self._get_save_image_name(output_dir,
-                                                          image_path)
-                    logger.info("Detection bbox results save in {}".format(
-                        save_name))
-                    image.save(save_name, quality=95)
+                    #save_name = self._get_save_image_name(output_dir,
+                     #                                     image_path)
+                    #logger.info("Detection bbox results save in {}".format(
+                     #   save_name))
+                    #image.save(save_name, quality=95)
 
                     start = end
         return results, bbox_res

@@ -2,7 +2,7 @@ numpy < 1.24
 tqdm
 typeguard
 visualdl>=2.2.0
-opencv-python <= 4.6.0
+opencv-python
 PyYAML
 shapely
 scipy
@@ -14,7 +14,7 @@ setuptools
 # for MOT evaluation and inference
 lap
 motmetrics
-sklearn==0.0
+sklearn
 
 # for vehicleplate in deploy/pipeline/ppvehicle
 pyclipper
