@@ -32,7 +32,9 @@ from ppdet.slim import build_slim_model
 ####
 # Toggle the variable below to debug locally. The final container would need to have execute_in_docker=True
 ####
+# When building docker image, modify 'False' to 'True'
 execute_in_docker = False
+# execute_in_docker = True
 
 
 class VideoLoader():
@@ -303,11 +305,11 @@ class Surgtoolloc_det(DetectionAlgorithm):
             xmin, ymin, w, h = box['bbox']
             xmax, ymax = xmin + w, ymin + h
             
-            # ¿©’≈1.03±∂
+            # ¿©’≈1.05±∂
             x_center = xmin + (w / 2)
             y_center = ymin + (h / 2)
-            new_w = 1.03 * w
-            new_h = 1.03 * h
+            new_w = 1.05 * w
+            new_h = 1.05 * h
             new_xmin = x_center - (new_w / 2)
             new_ymin = y_center - (new_h / 2)
             xmin, ymin, w, h = new_xmin, new_ymin, new_w, new_h

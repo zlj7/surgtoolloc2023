@@ -1,101 +1,168 @@
-# Docker image & algorithm submission for Category 2 of SurgToolLoc Challenge 2022
+# Surgical Tool Localization in Endoscopic Videos: A Novel Approach Using Dense Teacher Models
 
-This repository has everything you and your team need to make an algorithm submission for the [SurgToolLoc Challenge](https://surgtoolloc.grand-challenge.org/) Category 2.
+## Install 
 
-Be sure that you have a verified account on Grand Challenge and are accepted as a participant in the SurgToolLoc challenge.
-You should be able to submit your Docker container/algorithm on the challenge website when the submission opens.
+Our code is based on [PaddleDetection](https://github.com/PaddlePaddle/PaddleDetection).To run our code, you must first install PaddlePaddle and PaddleDetection.
 
-Here are some useful documentation links for your submission process:
-- [Tutorial on how to make an algorithm container on Grand Challenge](https://grand-challenge.org/blogs/create-an-algorithm/)
-- [Docker documentation](https://docs.docker.com/)
-- [Evalutils documentation](https://evalutils.readthedocs.io/)
-- [Grand Challenge documentation](https://comic.github.io/grand-challenge.org/algorithms.html)
+### Requirements:
 
-## Prerequisites
-
-You will need to have [Docker](https://docs.docker.com/) installed on your system. We recommend using Linux with a Docker installation. If you are on Windows, please use [WSL 2.0](https://docs.microsoft.com/en-us/windows/wsl/install).
-
-## Prediction format
-
-For category 2 of [SurgToolLoc Challenge](https://surgtoolloc.grand-challenge.org/) (surgical tool detection) the instructions to generate the Docker container are given below
-
-### Category #2 – Surgical tool detection:  
-
-The output json file needs to be a dictionary containing the set of tools detected in each frame with its correspondent bounding box corners (x, y), again generating a single json file for each video like given below:  
-
-```
-{ 
-    "type": "Multiple 2D bounding boxes", 
-    "boxes": [ 
-        { 
-        "corners": [ 
-            [ 54.7, 95.5, 0.5], 
-            [ 92.6, 95.5, 0.5], 
-            [ 92.6, 136.1, 0.5], 
-            [ 54.7, 136.1, 0.5] 
-        ], 
-        "name": "slice_nr_1_needle_driver",
-        "probability": 0.452
-        }, 
-        { 
-        "corners": [ 
-            [ 54.7, 95.5, 0.5], 
-            [ 92.6, 95.5, 0.5], 
-            [ 92.6, 136.1, 0.5], 
-            [ 54.7, 136.1, 0.5] 
-        ], 
-        "name": "slice_nr_2_monopolar_curved_scissor", 
-        "probability": 0.783
-        } 
-    ], 
-    "version": { "major": 1, "minor": 0 } 
-} 
-```
- Please note that the third value of each corner coordinate is not necessary for predictions but must be kept 0.5 always to comply with the Grand Challenge automated evaluation system (which was built to also consider datasets of 3D images). To standardize the submissions, the first corner is intended to be the top left corner of the bounding box, with the subsequent corners following the clockwise direction. The “type” and “version” entries are to comply with grand-challenge automated evaluation system. 
- **Please use the "probability" entry to include the confidence score for each detected bounding box.**
+- PaddlePaddle 2.2
+- OS 64 bit
+- Python 3(3.5.1+/3.6/3.7/3.8/3.9/3.10)，64 bit
+- pip/pip3(9.0.1+), 64 bit
+- CUDA >= 10.2
+- cuDNN >= 7.6
 
 
-## Adapting the container to your algorithm
+Dependency of PaddleDetection and PaddlePaddle:
 
-1. First, clone this repository:
+| PaddleDetection version | PaddlePaddle version |                     tips                     |
+| :---------------------: | :------------------: | :------------------------------------------: |
+|         develop         |       >= 2.3.2       |        Dygraph mode is set as default        |
+|       release/2.6       |       >= 2.3.2       |        Dygraph mode is set as default        |
+|       release/2.5       |       >= 2.2.2       |        Dygraph mode is set as default        |
+|       release/2.4       |       >= 2.2.2       |        Dygraph mode is set as default        |
+|       release/2.3       |      >= 2.2.0rc      |        Dygraph mode is set as default        |
+|       release/2.2       |       >= 2.1.2       |        Dygraph mode is set as default        |
+|       release/2.1       |       >= 2.1.0       |        Dygraph mode is set as default        |
+|       release/2.0       |       >= 2.0.1       |        Dygraph mode is set as default        |
+|     release/2.0-rc      |       >= 2.0.1       |                      --                      |
+|       release/0.5       |       >= 1.8.4       | Cascade R-CNN and SOLOv2 depends on 2.0.0.rc |
+|       release/0.4       |       >= 1.8.4       |           PP-YOLO depends on 1.8.4           |
+|       release/0.3       |        >=1.7         |                      --                      |
+
+### Instruction
+
+#### 1. Install PaddlePaddle
 
 ```
-git clone https://github.com/aneeqzia-isi/surgtoolloc2022-category-2.git
+# CUDA10.2
+python -m pip install paddlepaddle-gpu==2.3.2 -i https://mirror.baidu.com/pypi/simple
+
+# CPU
+python -m pip install paddlepaddle==2.3.2 -i https://mirror.baidu.com/pypi/simple
 ```
 
-2. Our `Dockerfile` should have everything you need, but you may change it to another base image/add your algorithm requirements if your algorithm requires it:
+- For more CUDA version or environment to quick install, please refer to the [PaddlePaddle Quick Installation document](https://www.paddlepaddle.org.cn/install/quick)
+- For more installation methods such as conda or compile with source code, please refer to the [installation document](https://www.paddlepaddle.org.cn/documentation/docs/en/install/index_en.html)
 
-![Alt text](README_files/dockerfile_instructions.png?raw=true "Flow")
+Please make sure that your PaddlePaddle is installed successfully and the version is not lower than the required version. Use the following command to verify.
 
-3. Edit `process.py` - this is the main step for adapting this repo for your model. This script will load your model and corresponding weights, perform inference on input videos one by one along with any required pre/post-processing, and return the predictions of surgical tool classification as a dictionary. The class Surgtoolloc_det contains the predict function. You should replace the dummy code in this function with the code for your inference algorihm. Use `__init__` to load your weights and/or perform any needed operation. We have added `TODO` on places which you would need to adapt for your model
+```
+# check
+>>> import paddle
+>>> paddle.utils.run_check()
 
-4. Run `build.sh`  to build the container. 
+# confirm the paddle's version
+python -c "import paddle; print(paddle.__version__)"
+```
 
-5. In order to do local testing, you can edit and run `test.sh`. You will probably need to modify the script and parts of `process.py` to adapt for your local testing. The main thing that you can check is whether the output json being produced by your algorithm container at ./output/surgical-tools.json is similar to the sample json present in the main folder (also named surgical-tools.json).
+**Note**
 
- PLEASE NOTE: You will need to change the variable `execute_in_docker` to False while running directly locally. But will need to switch it back once you   are done testing, as the paths where data is kept and outputs are saved are modified based on this boolean. Be aware that the output of running test.sh, of course, initially may not be equal to the sample predictions we put there for our testing. Feel free to modify the test.sh based on your needs.
+1.  If you want to use PaddleDetection on multi-GPU, please install NCCL at first.
 
-5. Run `export.sh`. This script will will produce `surgtoolloc_det.tar.gz` (you can change the name of your container by modifying the script). This is the file to be used when uploading the algorithm to Grand Challenge.
+#### 2. Install PaddleDetection
 
-## Uploading your container to the grand-challenge platform
+**Note:** Installing via pip only supports Python3
 
-1. Create a new algorithm [here](https://surgtoolloc.grand-challenge.org/evaluation/challenge/algorithms/create/). Fill in the fields as specified on the form.
+```
+cd PaddleDetection_Surtool23
 
-2. On the page of your new algorithm, go to `Containers` on the left menu and click `Upload a Container`. Now upload your `.tar.gz` file produced in step 5. 
+# Install other dependencies
+pip install -r requirements.txt
 
-3. After the Docker container is marked as `Ready`, you may be temped to try out your own algorithm when clicking `Try-out Algorithm` on the page of your algorithm. But doing so will likely fail. WARNING: Using this container in `Try-out` will fail. You can still use the Try-out feature to check logs from the algorithm and ensure that processes are running but it will not pass. However, if built correctly and you see the expected logs from your algorithm, then the container should still work for the Prelim submission. 
+# Compile and install paddledet
+python setup.py install
 
-4. WE STRONGLY RECOMMEND that you make at least 1-2 Prelim submissions before August 26th to ensure that your container runs correctly. Start earlier (Aug 19th) so we can help debug issues that may arise, otherwise there will be no opportunities to debug containers during the main submission!
+```
 
-5. To make a submission to one of the test phases. Go to the [SurgToolLoc Challenge](https://surgtoolloc.grand-challenge.org/) and click `Submit`. Under `Algorithm`, choose the algorithm that you just created. Then hit `Save`. After the processing in the backend is done, your submission should show up on the leaderboard if there are no errors.
+**Note**
 
-The figure below indicates the step-by-step of how to upload a container:
+1. If you are working on Windows OS, `pycocotools` installing may failed because of the origin version of cocoapi does not support windows, another version can be used used which only supports Python3:
 
-![Alt text](README_files/MICCAI_surgtoolloc_fig.png?raw=true "Flow")
+   ```pip install git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI```
 
-If something does not work for you, please do not hesitate to [contact us](mailto:isi.challenges@intusurg.com) or [add a post in the forum](https://grand-challenge.org/forums/forum/endoscopic-surgical-tool-localization-using-tool-presence-labels-663/). 
+2. If you are using Python <= 3.6, `pycocotools` installing may failed with error like `distutils.errors.DistutilsError: Could not find suitable distribution for Requirement.parse('cython>=0.27.3')`, please install `cython` firstly, for example `pip install cython`
 
-## Acknowledgments
+After installation, make sure the tests pass:
 
-The repository is greatly inspired and adapted from [MIDOG reference algorithm](https://github.com/DeepPathology/MIDOG_reference_docker), [AIROGS reference algorithm](https://github.com/qurAI-amsterdam/airogs-example-algorithm) and [SLCN reference algorithm](https://github.com/metrics-lab/SLCN_challenge)
+```shell
+python ppdet/modeling/tests/test_architectures.py
+```
+
+If the tests are passed, the following information will be prompted:
+
+```
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 12.816s
+OK
+```
+
+
+
+### Install other requirements
+
+Other requirements are:
+
+- evalutils==0.3.1
+- scikit-learn==0.24.2
+- scipy
+
+you could simply run:
+
+```
+cd ..
+pip install -r requirements.txt
+```
+
+
+
+## Run
+
+After completing the installation, you can run our code.
+
+You can download our model using this [link](https://pan.baidu.com/s/12s_AFa78YZRqXTXz4rdIzg?pwd=23d5) and place it in the following directory: `PaddleDetection_Surtool23/model_weights/denseteacher_ppyoloe_plus_crn_x_coco_full/`
+
+If the link is not working, please contact 1120201985@bit.edu.cn.
+
+After downloading weight, you could run our code by:
+```
+cd PaddleDetection_Surtool23
+python process.py -c configs/semi_det/denseteacher/denseteacher_ppyoloe_plus_crn_x_coco_full.yml -o weights=model_weights/denseteacher_ppyoloe_plus_crn_x_coco_full/best_model.pdparams
+```
+
+The results will be saved in `output/surgical-tools.json`.
+
+
+
+## Build docker
+
+When building the Docker image, please modify line 36 of `PaddleDetection_Surtool23/process.py`, change `False` to `True`
+
+```
+####
+# Toggle the variable below to debug locally. The final container would need to have execute_in_docker=True
+####
+# When building docker image, modify 'False' to 'True'
+# execute_in_docker = False
+execute_in_docker = True
+
+
+class VideoLoader():
+    def load(self, *, fname):
+```
+
+Then run the scripts:
+
+```
+# build the docker image
+./build.sh
+
+# test the docker image
+./test.sh
+
+# export the docker image
+./export.sh
+```
 
